@@ -8,22 +8,22 @@ A machine learning project that estimates property prices by combining **tabular
 
 ## 📌 Project Overview
 
-Traditional property valuation models rely only on tabular features such as size, location codes, or amenities.  
+Traditional property valuation models rely only on tabular features such as size, location codes, or amenities.
 This project enhances valuation by incorporating **satellite imagery context** (via Mapbox) to capture spatial signals such as surroundings, density, and locality characteristics.
 
 ### Key Highlights
-- Clean separation of **data fetching**, **preprocessing**, **training**, and **inference**
-- Sample vs full dataset execution support
-- Leakage-safe evaluation
-- Reproducible pipeline with clear artifact management
-- Ready for portfolio, interviews, and extension
+
+* Clean separation of **data fetching**, **preprocessing**, **training**, and **inference**
+* Sample vs full dataset execution support
+* Leakage-safe evaluation
+* Reproducible pipeline with clear artifact management
+* Ready for portfolio, interviews, and future extension
 
 ---
 
 ## 🏗️ High-Level Architecture
 
 ```
-
 Satellite Imagery (Conceptual)
             ↓
 Spatial Context Understanding
@@ -35,15 +35,15 @@ Tabular Feature Set
 Random Forest Regressor
             ↓
 Predicted Property Price
-
 ```
+
+> Note: Satellite imagery is used conceptually to derive spatial context and is not directly fed as raw pixels into a deep learning model in this version.
 
 ---
 
 ## 📁 Repository Structure
 
 ```
-
 SATELLITE_PROPERTY_VALUATION/
 │
 ├── data/                        # Structured tabular datasets
@@ -52,7 +52,7 @@ SATELLITE_PROPERTY_VALUATION/
 │   ├── X_features_full.csv      # Engineered feature matrix (full data)
 │   └── y_target_full.csv        # Target variable (property prices)
 │
-├── images/                      # Satellite imagery data
+├── images/                      # Satellite imagery data (generated at runtime)
 │   ├── train/                   # Full training images
 │   ├── test/                    # Test images for inference
 │   └── train_sample/            # Small image subset for experiments
@@ -62,17 +62,12 @@ SATELLITE_PROPERTY_VALUATION/
 ├── preprocessing.ipynb          # Data cleaning & feature engineering
 ├── model_training.ipynb         # Model training, validation & evaluation
 │
-├── predicted_vs_actual_training_data.csv
-│                                 # Actual vs predicted values (training set)
-│
-├── submission.csv               # Final model predictions (test set)
+├── 24119014_final.csv           # Final model predictions (test set)
 │
 ├── requirements.txt             # Python dependencies
 │
 ├── .gitignore                   # Files & folders excluded from version control
 └── README.md                    # Project documentation
-
-
 ```
 
 ---
@@ -82,30 +77,33 @@ SATELLITE_PROPERTY_VALUATION/
 To keep the repository **clean, lightweight, and secure**, the following are intentionally excluded:
 
 ### ❌ `images/` contents
-- Satellite images are **large and auto-generated**
-- They are fetched dynamically using `data_fetcher.py`
-- Including them would bloat the repository
 
-✔️ **Solution:**  
+* Satellite images are **large and auto-generated**
+* They are fetched dynamically using `data_fetcher.py`
+* Including them would unnecessarily bloat the repository
+
+✔️ **Solution:**
 An empty `images/` folder is kept so the code knows where to save images at runtime.
 
 ---
 
 ### ❌ `venv/` (Virtual Environment)
-- Platform-specific
-- Extremely large
-- Not portable across systems
 
-✔️ **Solution:**  
-Dependencies are listed in `requirements.txt`
+* Platform-specific
+* Extremely large
+* Not portable across systems
+
+✔️ **Solution:**
+Dependencies are listed in `requirements.txt` so users can recreate the environment locally.
 
 ---
 
 ### ❌ API Keys / Secrets
-- Never commit credentials to GitHub
 
-✔️ **Solution:**  
-Use environment variables (explained below)
+* Credentials must never be committed to GitHub
+
+✔️ **Solution:**
+Environment variables are used (explained below).
 
 ---
 
@@ -114,29 +112,30 @@ Use environment variables (explained below)
 The `.gitignore` file is **required and should be uploaded**.
 
 It prevents:
-- accidental uploads of large files
-- leaking credentials
-- committing virtual environments
+
+* accidental uploads of large or generated files
+* leaking credentials
+* committing virtual environments
 
 Example exclusions:
-```
 
+```
 venv/
 images/*
-**pycache**/
+__pycache__/
 .env
-
-````
+```
 
 ---
 
 ## ⚙️ Setup Instructions (Step-by-Step)
 
 ### 1️⃣ Clone the Repository
+
 ```bash
 git clone https://github.com/<your-username>/Satellite_Property_Valuation.git
 cd Satellite_Property_Valuation
-````
+```
 
 ---
 
@@ -148,13 +147,13 @@ python -m venv venv
 
 Activate it:
 
-* **Windows**
+**Windows**
 
 ```bash
 venv\Scripts\activate
 ```
 
-* **macOS / Linux**
+**macOS / Linux**
 
 ```bash
 source venv/bin/activate
@@ -205,14 +204,14 @@ Satellite images will be automatically saved here when running the data fetcher.
 ### Step 1 — Fetch Satellite Images
 
 ```bash
-python src/data_fetcher.py
+python data_fetcher.py
 ```
 
 This will:
 
-* Read coordinates
-* Download satellite images
-* Save them into `images/`
+* Read latitude and longitude values
+* Download satellite images using Mapbox
+* Save images into the `images/` directory
 
 ---
 
@@ -221,7 +220,7 @@ This will:
 Open and run:
 
 ```
-notebooks/preprocessing.ipynb
+preprocessing.ipynb
 ```
 
 Supports:
@@ -236,14 +235,14 @@ Supports:
 Run:
 
 ```
-notebooks/model_training.ipynb
+model_training.ipynb
 ```
 
 Outputs:
 
 * Trained model
-* Evaluation metrics
-* `predicted_vs_actual_*.csv` for error analysis
+* Validation metrics (RMSE, R²)
+* Evaluation artifacts for error analysis
 
 ---
 
@@ -252,16 +251,16 @@ Outputs:
 Run:
 
 ```
-notebooks/test_inference.ipynb
+test_inference.ipynb
 ```
 
 Generates:
 
 ```
-submission.csv
+24119014_final.csv
 ```
 
-(This is the final prediction file.)
+This file contains **final property price predictions for the unseen test dataset**.
 
 ---
 
@@ -274,7 +273,7 @@ submission.csv
 * signed error
 * absolute error
 
-This file is **for analysis only**, not submission.
+This file is **for analysis and diagnostics only**, not a submission file.
 
 ---
 
@@ -286,17 +285,19 @@ This file is **for analysis only**, not submission.
 * feature selection
 * model training
 
-✔️ Test data is used **only once** for inference.
+✔️ Test data is used **only once** for final inference.
+
+This ensures evaluation integrity and production-grade ML hygiene.
 
 ---
 
 ## 🚀 Future Improvements
 
 * CNN-based satellite image embeddings
-* Gradient boosting models
+* Gradient boosting models (XGBoost / LightGBM)
 * Temporal price modeling
 * Model ensembling
-* Deployment via API
+* Model deployment via REST API
 
 ---
 
@@ -311,6 +312,6 @@ Data Science & Machine Learning Enthusiast
 ## ⭐ Final Note
 
 This repository is structured to reflect **real-world ML engineering practices**, not just experimentation.
-Every inclusion and exclusion is **intentional** and explained for clarity and reproducibility.
+Every inclusion and exclusion is **intentional**, documented, and designed for clarity, reproducibility, and professional use.
 
 ---
