@@ -1,4 +1,4 @@
-
+---
 
 ## 🛰️ Satellite Imagery–Based Property Valuation
 
@@ -8,8 +8,11 @@ A machine learning project that estimates property prices by combining **tabular
 
 ## 📌 Project Overview
 
-Traditional property valuation models rely only on tabular features such as size, location codes, or amenities.
-This project enhances valuation by incorporating **satellite imagery context** (via Mapbox) to capture spatial signals such as surroundings, density, and locality characteristics.
+Traditional property valuation models rely primarily on tabular features such as size, location codes, or amenities.
+However, real-estate prices are also heavily influenced by **spatial and environmental context** (neighborhood characteristics, surrounding infrastructure, locality density), which tabular data alone often fails to capture.
+
+This project enhances valuation by incorporating **satellite imagery–informed spatial context** (via Mapbox).
+Rather than directly training a deep learning vision model, satellite imagery is used **conceptually** to derive **engineered geospatial features**, which are then combined with tabular data for prediction.
 
 ### Key Highlights
 
@@ -17,7 +20,8 @@ This project enhances valuation by incorporating **satellite imagery context** (
 * Sample vs full dataset execution support
 * Leakage-safe evaluation
 * Reproducible pipeline with clear artifact management
-* Ready for portfolio, interviews, and future extension
+* Designed to be interpretable, practical, and extensible
+* Ready for portfolio review, academic evaluation, and interviews
 
 ---
 
@@ -37,7 +41,67 @@ Random Forest Regressor
 Predicted Property Price
 ```
 
-> Note: Satellite imagery is used conceptually to derive spatial context and is not directly fed as raw pixels into a deep learning model in this version.
+> Important clarification:
+> Satellite imagery is **not** used as raw image pixels inside a CNN in this version.
+> Instead, it is used to **inform spatial context**, which is converted into numeric geospatial features suitable for tabular machine learning.
+
+---
+
+## 🧠 Modeling Approach & Design Decisions
+
+### Why satellite imagery is used conceptually (not as raw pixels)
+
+Satellite images contain rich spatial information, but training CNN-based vision models requires:
+
+* very large labeled datasets
+* high computational resources
+* complex explainability tooling
+
+Given the dataset size and the problem focus (property valuation, not image classification), a **proxy-based multimodal approach** was chosen.
+
+Satellite imagery is used to **derive spatial signals** (location interactions, locality effects), which are represented numerically and combined with structured property data.
+
+This makes the solution:
+
+* more stable
+* easier to interpret
+* aligned with tabular ML best practices
+
+---
+
+### Why Random Forest is used
+
+The final prediction model is a **Random Forest Regressor** because:
+
+* the feature space is fully numeric and tabular
+* Random Forests capture non-linear relationships well
+* they are robust to noise and outliers
+* they provide built-in feature importance for explainability
+
+---
+
+### Why CNNs and Grad-CAM are NOT used
+
+CNNs and Grad-CAM are applicable only when:
+
+* raw image tensors are fed directly into a neural network
+* predictions depend on pixel-level activations
+
+In this project:
+
+* no CNN is trained
+* satellite images are not passed directly into the model
+* predictions depend entirely on numeric features
+
+Therefore, **Grad-CAM would be conceptually incorrect** and was intentionally not used.
+
+Explainability is instead handled via:
+
+* feature importance analysis
+* predicted vs actual comparisons
+* absolute and relative error diagnostics
+
+This is the **correct explainability approach for tabular models**.
 
 ---
 
@@ -83,7 +147,7 @@ To keep the repository **clean, lightweight, and secure**, the following are int
 * Including them would unnecessarily bloat the repository
 
 ✔️ **Solution:**
-An empty `images/` folder is kept so the code knows where to save images at runtime.
+Only the folder structure is kept so the pipeline knows where to save images at runtime.
 
 ---
 
@@ -240,9 +304,10 @@ model_training.ipynb
 
 Outputs:
 
-* Trained model
+* Baseline and enhanced Random Forest models
 * Validation metrics (RMSE, R²)
-* Evaluation artifacts for error analysis
+* Feature importance
+* Error diagnostics (absolute and relative)
 
 ---
 
@@ -272,8 +337,11 @@ This file contains **final property price predictions for the unseen test datase
 * predicted price
 * signed error
 * absolute error
+* relative error
 
 This file is **for analysis and diagnostics only**, not a submission file.
+
+Large absolute errors are expected due to the wide numeric range of real-estate prices; relative error provides better interpretability.
 
 ---
 
@@ -293,11 +361,11 @@ This ensures evaluation integrity and production-grade ML hygiene.
 
 ## 🚀 Future Improvements
 
-* CNN-based satellite image embeddings
+* CNN-based satellite image embeddings (with Grad-CAM explainability)
 * Gradient boosting models (XGBoost / LightGBM)
 * Temporal price modeling
 * Model ensembling
-* Model deployment via REST API
+* Deployment via REST API
 
 ---
 
@@ -311,7 +379,8 @@ Data Science & Machine Learning Enthusiast
 
 ## ⭐ Final Note
 
-This repository is structured to reflect **real-world ML engineering practices**, not just experimentation.
-Every inclusion and exclusion is **intentional**, documented, and designed for clarity, reproducibility, and professional use.
+This repository reflects **real-world ML engineering practices**, where every modeling, explainability, and architectural choice is intentional and justified.
+
+The project avoids unnecessary complexity, does not overclaim deep learning usage, and applies the **right tools for the given data and problem constraints**.
 
 ---
