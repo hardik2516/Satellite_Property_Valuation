@@ -28,15 +28,15 @@ This project enhances valuation by incorporating **satellite imagery–informed 
 ## 🏗️ High-Level Architecture (Conceptual)
 
 Satellite Imagery (Conceptual)
-↓
+-->
 Spatial Context Understanding
-↓
+-->
 Engineered Geospatial Features
-↓
+-->
 Tabular Feature Set
-↓
+-->
 Random Forest Regressor
-↓
+-->
 Predicted Property Price
 
 Important clarification:
