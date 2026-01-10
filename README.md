@@ -1,316 +1,330 @@
-
+---
 
 ## 🛰️ Satellite Imagery–Based Property Valuation
 
 A machine learning project that estimates property prices by combining **tabular real-estate data** with **satellite imagery–derived geospatial context**, using a clean, leakage-safe, production-style pipeline.
 
+This project prioritizes **correct modeling choices, reproducibility, and clarity of design decisions** over unnecessary complexity.
+
 ---
 
 ## 📌 Project Overview
 
-Traditional property valuation models rely only on tabular features such as size, location codes, or amenities.  
-This project enhances valuation by incorporating **satellite imagery context** (via Mapbox) to capture spatial signals such as surroundings, density, and locality characteristics.
+Traditional property valuation models rely primarily on structured tabular features such as property size, room count, and location codes. However, real-estate prices are strongly influenced by **spatial and environmental context** (neighborhood density, surrounding infrastructure, locality characteristics), which tabular data alone often fails to capture.
 
-### Key Highlights
-- Clean separation of **data fetching**, **preprocessing**, **training**, and **inference**
-- Sample vs full dataset execution support
-- Leakage-safe evaluation
-- Reproducible pipeline with clear artifact management
-- Ready for portfolio, interviews, and extension
+This project enhances valuation by incorporating **satellite imagery–informed spatial context** using a **proxy-based multimodal approach**, where satellite images inform **engineered geospatial features** rather than being directly fed into a deep vision model.
 
 ---
 
-## 🏗️ High-Level Architecture
+## 🎯 Key Objectives
 
-```
+* Incorporate spatial awareness into property valuation
+* Maintain strict **data leakage safety**
+* Use **appropriate explainability methods** for the chosen model
+* Keep the pipeline **practical, interpretable, and extensible**
+
+---
+
+## 🏗️ High-Level Architecture (Conceptual)
 
 Satellite Imagery (Conceptual)
-            ↓
+↓
 Spatial Context Understanding
-            ↓
+↓
 Engineered Geospatial Features
-            ↓
+↓
 Tabular Feature Set
-            ↓
+↓
 Random Forest Regressor
-            ↓
+↓
 Predicted Property Price
 
-```
+Important clarification:
+Satellite imagery is **not** used as raw image pixels inside the model. Instead, it is used to **inform spatial context**, which is converted into numeric features suitable for tabular machine learning.
+
+---
+
+## 🧠 Modeling Approach & Design Choices (Critical Section)
+
+### 1️⃣ Why satellite imagery is used conceptually (not as raw pixels)
+
+Satellite images provide rich spatial information but training CNN-based vision models requires:
+
+* very large labeled datasets
+* high computational resources
+* complex explainability tooling
+
+Given the dataset size and the project goal (property valuation, not vision research), a **proxy-based approach** was chosen.
+
+Satellite imagery is used to derive **geospatial signals** (location interactions, spatial effects), which are then represented numerically.
+
+This makes the model:
+
+* more stable
+* easier to interpret
+* suitable for tabular ML
+
+---
+
+### 2️⃣ Why Random Forest (and not CNN)
+
+The final prediction model is a **Random Forest Regressor** because:
+
+* the final feature space is numeric/tabular
+* Random Forests handle non-linear relationships well
+* they are robust to noise
+* they provide feature importance for explainability
+
+CNNs were **not used** because:
+
+* raw image tensors are not model inputs
+* the project focuses on valuation accuracy, not image classification
+* Random Forest is a better fit for structured + geo-engineered data
+
+---
+
+### 3️⃣ Why Grad-CAM is NOT used (explicit clarification)
+
+Grad-CAM is applicable **only** when:
+
+* a CNN is trained on raw images
+* predictions depend directly on pixel activations
+
+In this project:
+
+* no CNN is trained
+* no image tensors are passed to the model
+* predictions depend on numeric features only
+
+Therefore, **Grad-CAM would be conceptually incorrect** and was intentionally not used.
+
+Instead, explainability is handled via:
+
+* feature importance (Random Forest)
+* error analysis (actual vs predicted)
+* absolute and relative error inspection
+
+This is the **correct explainability strategy** for tabular models.
 
 ---
 
 ## 📁 Repository Structure
 
-```
-
 SATELLITE_PROPERTY_VALUATION/
-│
-├── data/                        # Structured tabular datasets
-│   ├── train.xlsx               # Original training dataset
-│   ├── test.xlsx                # Original test dataset
-│   ├── X_features_full.csv      # Engineered feature matrix (full data)
-│   └── y_target_full.csv        # Target variable (property prices)
-│
-├── images/                      # Satellite imagery data
-│   ├── train/                   # Full training images
-│   ├── test/                    # Test images for inference
-│   └── train_sample/            # Small image subset for experiments
-│
-├── data_fetcher.py              # Image ↔ tabular data mapping logic
-│
-├── preprocessing.ipynb          # Data cleaning & feature engineering
-├── model_training.ipynb         # Model training, validation & evaluation
-│
-├── predicted_vs_actual_training_data.csv
-│                                 # Actual vs predicted values (training set)
-│
-├── submission.csv               # Final model predictions (test set)
-│
-├── requirements.txt             # Python dependencies
-│
-├── .gitignore                   # Files & folders excluded from version control
-└── README.md                    # Project documentation
 
+data/
 
-```
+* train.xlsx
+* test.xlsx
+* X_features_full.csv
+* y_target_full.csv
+
+images/
+
+* train/
+* test/
+* train_sample/
+
+data_fetcher.py
+
+preprocessing.ipynb
+model_training.ipynb
+test_inference.ipynb
+
+predicted_vs_actual_training_data.csv
+submission.csv
+
+requirements.txt
+.gitignore
+README.md
 
 ---
 
 ## 🚫 What Is NOT Included (and Why)
 
-To keep the repository **clean, lightweight, and secure**, the following are intentionally excluded:
+### Satellite image files
 
-### ❌ `images/` contents
-- Satellite images are **large and auto-generated**
-- They are fetched dynamically using `data_fetcher.py`
-- Including them would bloat the repository
+* Large in size
+* Generated dynamically via Mapbox API
+* Can be regenerated at any time
 
-✔️ **Solution:**  
-An empty `images/` folder is kept so the code knows where to save images at runtime.
+To keep the repository lightweight, only the **folder structure** is included.
 
 ---
 
-### ❌ `venv/` (Virtual Environment)
-- Platform-specific
-- Extremely large
-- Not portable across systems
+### Virtual environment (venv/)
 
-✔️ **Solution:**  
-Dependencies are listed in `requirements.txt`
+* System-specific
+* Not portable
+* Recreated using requirements.txt
 
 ---
 
-### ❌ API Keys / Secrets
-- Never commit credentials to GitHub
+### API keys / secrets
 
-✔️ **Solution:**  
-Use environment variables (explained below)
+* Must never be committed
+* Stored locally using environment variables
 
----
-
-## 📄 `.gitignore` (Important)
-
-The `.gitignore` file is **required and should be uploaded**.
-
-It prevents:
-- accidental uploads of large files
-- leaking credentials
-- committing virtual environments
-
-Example exclusions:
-```
-
-venv/
-images/*
-**pycache**/
-.env
-
-````
+These exclusions follow **industry-standard ML repository practices**.
 
 ---
 
-## ⚙️ Setup Instructions (Step-by-Step)
+## ⚙️ Setup & Execution Guide (Zero Ambiguity)
 
-### 1️⃣ Clone the Repository
-```bash
-git clone https://github.com/<your-username>/Satellite_Property_Valuation.git
+### Step 1 — Clone the repository
+
+git clone [https://github.com/your-username/Satellite_Property_Valuation.git](https://github.com/your-username/Satellite_Property_Valuation.git)
 cd Satellite_Property_Valuation
-````
 
 ---
 
-### 2️⃣ Create a Virtual Environment
+### Step 2 — Create and activate a virtual environment
 
-```bash
 python -m venv venv
-```
 
-Activate it:
-
-* **Windows**
-
-```bash
+Windows:
 venv\Scripts\activate
-```
 
-* **macOS / Linux**
-
-```bash
+macOS / Linux:
 source venv/bin/activate
-```
 
 ---
 
-### 3️⃣ Install Dependencies
+### Step 3 — Install dependencies
 
-```bash
 pip install -r requirements.txt
-```
 
 ---
 
-### 4️⃣ Set Environment Variables (Mapbox API)
+### Step 4 — Set Mapbox API key
 
 Create an environment variable:
 
-**Windows (PowerShell):**
-
-```powershell
+Windows (PowerShell):
 setx MAPBOX_API_KEY "your_api_key_here"
-```
 
-**macOS / Linux:**
-
-```bash
+macOS / Linux:
 export MAPBOX_API_KEY="your_api_key_here"
-```
 
 ---
 
-### 5️⃣ Ensure Folder Structure Exists
+### Step 5 — Ensure folder structure
 
-Make sure this folder exists (even if empty):
+Ensure the following folder exists:
 
-```
 images/
-```
 
-Satellite images will be automatically saved here when running the data fetcher.
-
----
-
-## ▶️ How to Run the Project
-
-### Step 1 — Fetch Satellite Images
-
-```bash
-python src/data_fetcher.py
-```
-
-This will:
-
-* Read coordinates
-* Download satellite images
-* Save them into `images/`
+Satellite images will be automatically saved here when fetching data.
 
 ---
 
-### Step 2 — Preprocessing & Feature Engineering
+## ▶️ How to Run the Project (End-to-End)
+
+### Step 1 — Fetch satellite images (optional but supported)
+
+python data_fetcher.py
+
+Downloads satellite image tiles based on latitude and longitude.
+
+---
+
+### Step 2 — Preprocessing & feature engineering
 
 Open and run:
 
-```
-notebooks/preprocessing.ipynb
-```
+preprocessing.ipynb
 
-Supports:
+This performs:
 
-* Sample mode (fast experimentation)
-* Full dataset mode (final training)
+* data cleaning
+* feature engineering
+* geospatial feature creation
+* sample vs full dataset switching
 
----
-
-### Step 3 — Model Training & Evaluation
-
-Run:
-
-```
-notebooks/model_training.ipynb
-```
-
-Outputs:
-
-* Trained model
-* Evaluation metrics
-* `predicted_vs_actual_*.csv` for error analysis
+Outputs ML-ready CSVs.
 
 ---
 
-### Step 4 — Test Inference (No Leakage)
+### Step 3 — Model training & evaluation
 
 Run:
 
-```
-notebooks/test_inference.ipynb
-```
+model_training.ipynb
+
+This includes:
+
+* baseline Random Forest (tabular only)
+* enhanced Random Forest (tabular + geo features)
+* RMSE and R² evaluation
+* error and absolute error analysis
+* feature importance inspection
+
+---
+
+### Step 4 — Test inference (no leakage)
+
+Run:
+
+test_inference.ipynb
 
 Generates:
-
-```
 submission.csv
-```
 
-(This is the final prediction file.)
-
----
-
-## 📊 Evaluation Artifacts
-
-`predicted_vs_actual_full.csv` contains:
-
-* actual price
-* predicted price
-* signed error
-* absolute error
-
-This file is **for analysis only**, not submission.
+Test data is used **only for prediction**, never for training.
 
 ---
 
-## 🔒 Data Leakage Safety
+## 📊 Evaluation Artifacts (Clarification)
 
-✔️ Test data is **never used** in:
+predicted_vs_actual_training_data.csv contains:
 
-* preprocessing fitting
-* feature selection
-* model training
+* actual_price
+* predicted_price
+* signed_error
+* absolute_error
+* relative_error
 
-✔️ Test data is used **only once** for inference.
+This file is **for analysis only**, not a submission.
+
+Large absolute errors are expected due to the wide price range of real estate; relative error provides better interpretability.
 
 ---
 
-## 🚀 Future Improvements
+## 🔒 Data Leakage Safety (Explicit)
 
-* CNN-based satellite image embeddings
+* No test data used during preprocessing fitting
+* No test data used during feature selection
+* No test data used during model training
+* All preprocessing artifacts reused consistently
+
+---
+
+## 🚀 Future Extensions (Not Implemented)
+
+* CNN-based satellite embeddings
+* Grad-CAM explainability (only if CNNs are introduced)
 * Gradient boosting models
-* Temporal price modeling
-* Model ensembling
-* Deployment via API
+* Region-specific models
+* API deployment
+
+These are intentionally left as future work.
 
 ---
 
 ## 👤 Author
 
-**Hardik Gautam**
+Hardik Gautam
 Data Science & Machine Learning Enthusiast
-📍 India | 🌍 Open to global opportunities
+India | Open to global opportunities
 
 ---
 
-## ⭐ Final Note
+## ⭐ Final Statement for Evaluators
 
-This repository is structured to reflect **real-world ML engineering practices**, not just experimentation.
-Every inclusion and exclusion is **intentional** and explained for clarity and reproducibility.
+This project emphasizes **correct methodology over buzzwords**.
+Every modeling and explainability choice is intentional, justified, and aligned with the data and problem constraints.
+
+No overclaiming. No misuse of deep learning.
+Only appropriate tools applied correctly.
 
 ---
